@@ -1,3 +1,8 @@
 # sqlite-api-ntoe
 > Job accumulation  
-## waiting...
+
+### todo
+* create
+* write
+* update
+* read
