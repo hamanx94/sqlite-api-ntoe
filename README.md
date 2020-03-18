@@ -1,7 +1,6 @@
 # sqlite-api-ntoe
 > Job accumulation  
 
-### todo
 * create
 ```cpp
 bool sql_table_create(
@@ -11,8 +10,7 @@ bool sql_table_create(
     tFIELD_DEF *stFieldDefs, 
     char *err);
 ```
-* write
-* update
+
 * read
 ```cpp
 bool sql_field_read(
@@ -23,3 +21,6 @@ bool sql_field_read(
     tFIELD_IO_SET *stOutList,
     char *err);
 ```
+### todo
+* write
+* update
