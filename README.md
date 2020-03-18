@@ -20,6 +20,6 @@ bool sql_field_read(
     char *tablename, 
     char *condition, 
     int FieldCount, 
-    tFIELD_IO_LIST *stOut,
+    tFIELD_IO_SET *stOutList,
     char *err);
 ```
