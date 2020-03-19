@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
     sql_field_read("sql_sample.db", "table1", nullptr, d_STRUCT_SIZE(field_set), field_set_list, errmsg);
     sql_db_close("sql_sample.db");
 
-    for(int i = 0 ; i < 10 ; i++)
+    for(int i = 0 ; i < (d_FIELD_SET_LIST_SIZE - 1) ; i++)
         for(int j = 0 ; j < d_STRUCT_SIZE(field_set) ; j++)
             free(field_set_list[i].field[j].FieldData);
 }
