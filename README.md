@@ -29,9 +29,8 @@ bool sql_field_read(
 bool sql_data_write(
     char *dbfilename, 
     char *tablename, 
-    tFIELD_DEF *stFieldDefs, 
-    int FieldNameCount, 
-    FieldData *fieldDataList, 
+    tFIELD *fieldList, 
+    int fieldCount, 
     char *err);
 ```
 
