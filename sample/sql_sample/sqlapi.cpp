@@ -171,7 +171,7 @@ static int read_callback(void *data, int argc, char **argv, char **azColName)
     return 0;
 }
 
-bool sql_field_read(char *dbfilename, char *tablename, FieldName *fieldNameList, int fieldNameCount, FieldData *fieldDataList , int *fieldDataCount, char *condition, char *err)
+bool sql_field_read(char *dbfilename, char *tablename, FieldName *fieldNameList, int fieldNameCount, FieldData *fieldDataList, int *fieldDataCount, char *condition, char *err)
 {
     char *zErrMsg = nullptr;
     int i, index, rc;
@@ -248,7 +248,7 @@ void sql_close_all()
     }
 }
 
-bool sql_data_write(char *dbfilename, char *tablename, tFIELD_DEF *stFieldDefs, int fieldDefCount, FieldData *fieldDataList, char *err)
+bool sql_data_write(char *dbfilename, char *tablename, tFIELD *fieldList, int fieldCount, char *err)
 {
     char *zErrMsg = nullptr;
     int i, index, rc;
@@ -259,27 +259,27 @@ bool sql_data_write(char *dbfilename, char *tablename, tFIELD_DEF *stFieldDefs, 
         return false;
 
     sprintf(cmd, "INSERT INTO %s (", tablename);
-    for(i = 0 ; i < fieldDefCount ; i++)
+    for(i = 0 ; i < fieldCount ; i++)
     {
-        strcat(cmd, stFieldDefs[i].FieldName);
-        if(i == (fieldDefCount - 1))
+        strcat(cmd, fieldList[i].FieldName);
+        if(i == (fieldCount - 1))
             strcat(cmd, ") ");
         else
             strcat(cmd, ", ");
     }
     strcat(cmd, "VALUES (");
-    for(i = 0 ; i < fieldDefCount ; i++)
+    for(i = 0 ; i < fieldCount ; i++)
     {
-        if(stFieldDefs[i].emDataType == _INTEGER)
-            strcat(cmd, fieldDataList[i]);
+        if(fieldList[i].emDataType == _INTEGER)
+            strcat(cmd, fieldList[i].FieldData);
         else
         {
             strcat(cmd, "'");
-            strcat(cmd, fieldDataList[i]);
+            strcat(cmd, fieldList[i].FieldData);
             strcat(cmd, "'");
         }
 
-        if(i == (fieldDefCount - 1))
+        if(i == (fieldCount - 1))
             strcat(cmd, ") ");
         else
             strcat(cmd, ", ");
@@ -340,7 +340,7 @@ bool sql_data_update(char *dbfilename, char *tablename, tFIELD *fieldList, int f
     return true;
 }
 
-bool sql_exec(char *dbfilename, char *cmd, char *err)
+static bool sql_exec(char *dbfilename, char *cmd, char *err)
 {
     char *zErrMsg = nullptr;
     int index, rc;

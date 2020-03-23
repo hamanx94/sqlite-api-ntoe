@@ -27,26 +27,27 @@ MainWindow::MainWindow(QWidget *parent) :
     sql_db_connect("sql_sample.db", errmsg);
     sql_table_create("sql_sample.db", "table1", d_STRUCT_SIZE(SAMPLE_TABLE), SAMPLE_TABLE, errmsg);
 
+    tFIELD fieldWriteList[] =
+    {
+        {"Number", _TEXT, "666"},
+        {"Name", _TEXT, "haman666"},
+        {"Address", _TEXT, "USA"}
+    };
+    sql_data_write("sql_sample.db", "table1", fieldWriteList, d_STRUCT_SIZE(fieldWriteList), errmsg);
+
+    tFIELD fieldUpdateList[] =
+    {
+        {"Number", _TEXT, "2"},
+        {"Address", _TEXT, "USA"}
+    };
+    sql_data_update("sql_sample.db", "table1", fieldUpdateList, d_STRUCT_SIZE(fieldUpdateList), "Name='hamanx94'", errmsg);
+
     FieldName fieldNameList[]=
     {
         {"Number"},
         {"Name"},
         {"Address"},
     };
-
-    FieldData dataList[d_STRUCT_SIZE(fieldNameList)];
-    dataList[0] = "1";
-    dataList[1] = "hamanx94";
-    dataList[2] = "Taiwan";
-    sql_data_write("sql_sample.db", "table1", SAMPLE_TABLE, d_STRUCT_SIZE(SAMPLE_TABLE), dataList, errmsg);
-
-    tFIELD fieldList[] =
-    {
-        {"Number", _TEXT, "2"},
-        {"Address", _TEXT, "USA"}
-    };
-    sql_data_update("sql_sample.db", "table1", fieldList, d_STRUCT_SIZE(fieldList), "Name='hamanx94'", errmsg);
-
     isOK = sql_field_read("sql_sample.db", "table1", fieldNameList, d_STRUCT_SIZE(fieldNameList), nullptr, &total, nullptr, errmsg);
     if(isOK)
     {

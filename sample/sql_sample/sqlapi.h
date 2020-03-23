@@ -46,9 +46,9 @@ bool sql_db_connect(char *dbfilename, char *err);
 
 bool sql_table_create(char *dbfilename, char *tablename, int FieldCount, tFIELD_DEF *stFieldDefs, char *err);
 
-bool sql_field_read(char *dbfilename, char *tablename, FieldName *fieldNameList, int fieldNameCount, FieldData *fieldDataList , int *fieldDataCount, char *condition, char *err);
+bool sql_field_read(char *dbfilename, char *tablename, FieldName *fieldNameList, int fieldNameCount, FieldData *fieldDataList, int *fieldDataCount, char *condition, char *err);
 
-bool sql_data_write(char *dbfilename, char *tablename, tFIELD_DEF *stFieldDefs, int FieldNameCount, FieldData *fieldDataList, char *err);
+bool sql_data_write(char *dbfilename, char *tablename, tFIELD *fieldList, int fieldCount, char *err);
 bool sql_data_update(char *dbfilename, char *tablename, tFIELD *fieldList, int fieldCount, char *condition, char *err);
 
 bool sql_commit(char *dbfilename, char *err);
