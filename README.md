@@ -16,11 +16,32 @@ bool sql_table_create(
 bool sql_field_read(
     char *dbfilename, 
     char *tablename, 
+    FieldName *fieldNameList, 
+    int fieldNameCount, 
+    FieldData *fieldDataList, 
+    int *fieldDataCount, 
     char *condition, 
-    int FieldCount, 
-    tFIELD_IO_SET *stOutList,
     char *err);
 ```
-### todo
+
 * write
+```cpp
+bool sql_data_write(
+    char *dbfilename, 
+    char *tablename, 
+    tFIELD_DEF *stFieldDefs, 
+    int FieldNameCount, 
+    FieldData *fieldDataList, 
+    char *err);
+```
+
 * update
+```cpp
+bool sql_data_update(
+    char *dbfilename, 
+    char *tablename, 
+    tFIELD *fieldList, 
+    int fieldCount, 
+    char *condition, 
+    char *err);
+```
