@@ -30,25 +30,32 @@ typedef struct
 typedef struct
 {
     char FieldName[64];
-    int FieldDataLength;
+    enum DataType emDataType;
     char *FieldData;
 } tFIELD;
+
+typedef char FieldName[64];
+typedef char *FieldData;
 
 #define d_FIELD_SIZE        (16)
 #define d_STATUS_EMPTY      (0)
 #define d_STATUS_BEEN_SET   (1)
-#define d_STATUS_LOCK       (2)
-
-typedef struct
-{
-    char status;
-    tFIELD field[d_FIELD_SIZE];
-}tFIELD_IO_SET;
+#define d_STATUS_FULL       (2)
 
 bool sql_db_connect(char *dbfilename, char *err);
+
 bool sql_table_create(char *dbfilename, char *tablename, int FieldCount, tFIELD_DEF *stFieldDefs, char *err);
-bool sql_field_read(char *dbfilename, char *tablename, char *condition, int FieldCount, tFIELD_IO_SET *stOutList, char *err);
+
+bool sql_field_read(char *dbfilename, char *tablename, FieldName *fieldNameList, int fieldNameCount, FieldData *fieldDataList , int *fieldDataCount, char *condition, char *err);
+
+bool sql_data_write(char *dbfilename, char *tablename, tFIELD_DEF *stFieldDefs, int FieldNameCount, FieldData *fieldDataList, char *err);
+bool sql_data_update(char *dbfilename, char *tablename, tFIELD *fieldList, int fieldCount, char *condition, char *err);
+
+bool sql_commit(char *dbfilename, char *err);
+bool sql_begin(char *dbfilename, char *err);
+
 void sql_db_close(char *filename);
+
 void sql_close_all();
 
 #endif // SQLAPI_H

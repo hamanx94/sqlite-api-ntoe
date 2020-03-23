@@ -7,6 +7,8 @@
 #define d_DB_SIZE       (256)
 #define d_DB_CMD_SIZE   (16 * 1024)
 
+static int g_Count;
+
 typedef struct
 {
     char dbfilename[256];
@@ -149,41 +151,27 @@ bool sql_table_create(char *dbfilename, char *tablename, int FieldCount, tFIELD_
 
 static int read_callback(void *data, int argc, char **argv, char **azColName)
 {
-    tFIELD_IO_SET *para = (tFIELD_IO_SET *)data;
-    tFIELD *current;
+    FieldData *para = (FieldData *)data;
     int offset;
 
-    offset = 0;
-    while(1)
+    offset = g_Count * argc;
+    g_Count++;
+    if(para == nullptr)
     {
-        if(para[offset].status == d_STATUS_EMPTY)
-        {
-            para[offset].status = d_STATUS_BEEN_SET;
-            current = para[offset].field;
-            break;
-        }
-        else if(para[offset].status == d_STATUS_LOCK)
-            return d_STATUS_LOCK;
-
-        offset++;
+        return 0;
     }
 
     for(int i = 0 ; i < argc ; i++)
     {
-        for(int j = 0 ; j < argc ; j++)
-        {
-            if(strcmp(current[i].FieldName, azColName[j]) == 0)
-            {
-                strcpy(current[i].FieldData, argv[j]);
-                break;
-            }
-        }
+        para[offset] = (FieldData)malloc(strlen(argv[i]) + 1);
+        strcpy(para[offset], argv[i]);
+        offset++;
     }
 
     return 0;
 }
 
-bool sql_field_read(char *dbfilename, char *tablename, char *condition, int FieldCount, tFIELD_IO_SET *stOutList, char *err)
+bool sql_field_read(char *dbfilename, char *tablename, FieldName *fieldNameList, int fieldNameCount, FieldData *fieldDataList , int *fieldDataCount, char *condition, char *err)
 {
     char *zErrMsg = nullptr;
     int i, index, rc;
@@ -194,10 +182,10 @@ bool sql_field_read(char *dbfilename, char *tablename, char *condition, int Fiel
         return false;
 
     strcpy(cmd, "SELECT ");
-    for(i = 0 ; i < FieldCount ; i++)
+    for(i = 0 ; i < fieldNameCount ; i++)
     {
-        strcat(cmd, stOutList[0].field[i].FieldName);
-        if(i == (FieldCount - 1))
+        strcat(cmd, fieldNameList[i]);
+        if(i == (fieldNameCount - 1))
             strcat(cmd, " ");
         else
             strcat(cmd, ", ");
@@ -211,7 +199,11 @@ bool sql_field_read(char *dbfilename, char *tablename, char *condition, int Fiel
     }
     strcat(cmd, ";");
 
-    rc = sqlite3_exec(db_list[index].handle, cmd, read_callback, (void *)stOutList, &zErrMsg);
+    g_Count = 0;
+    if(fieldDataList == NULL)
+        rc = sqlite3_exec(db_list[index].handle, cmd, read_callback, nullptr, &zErrMsg);
+    else
+        rc = sqlite3_exec(db_list[index].handle, cmd, read_callback, (void *)fieldDataList, &zErrMsg);
     if(rc != SQLITE_OK)
     {
         strcpy(err, zErrMsg);
@@ -219,6 +211,7 @@ bool sql_field_read(char *dbfilename, char *tablename, char *condition, int Fiel
         return false;
     }
 
+    *fieldDataCount = g_Count;
     return true;
 }
 
@@ -253,4 +246,126 @@ void sql_close_all()
         }
         index ++;
     }
+}
+
+bool sql_data_write(char *dbfilename, char *tablename, tFIELD_DEF *stFieldDefs, int fieldDefCount, FieldData *fieldDataList, char *err)
+{
+    char *zErrMsg = nullptr;
+    int i, index, rc;
+    char cmd[d_DB_CMD_SIZE];
+
+    index = find_db(dbfilename);
+    if(index == -1)
+        return false;
+
+    sprintf(cmd, "INSERT INTO %s (", tablename);
+    for(i = 0 ; i < fieldDefCount ; i++)
+    {
+        strcat(cmd, stFieldDefs[i].FieldName);
+        if(i == (fieldDefCount - 1))
+            strcat(cmd, ") ");
+        else
+            strcat(cmd, ", ");
+    }
+    strcat(cmd, "VALUES (");
+    for(i = 0 ; i < fieldDefCount ; i++)
+    {
+        if(stFieldDefs[i].emDataType == _INTEGER)
+            strcat(cmd, fieldDataList[i]);
+        else
+        {
+            strcat(cmd, "'");
+            strcat(cmd, fieldDataList[i]);
+            strcat(cmd, "'");
+        }
+
+        if(i == (fieldDefCount - 1))
+            strcat(cmd, ") ");
+        else
+            strcat(cmd, ", ");
+    }
+
+    strcat(cmd, ";");
+    rc = sqlite3_exec(db_list[index].handle, cmd, nullptr, nullptr, &zErrMsg);
+    if(rc != SQLITE_OK)
+    {
+        strcpy(err, zErrMsg);
+        sqlite3_free(zErrMsg);
+        return false;
+    }
+
+    return true;
+}
+
+bool sql_data_update(char *dbfilename, char *tablename, tFIELD *fieldList, int fieldCount, char *condition, char *err)
+{
+    char *zErrMsg = nullptr;
+    int i, index, rc;
+    char cmd[d_DB_CMD_SIZE];
+
+    index = find_db(dbfilename);
+    if(index == -1)
+        return false;
+
+    sprintf(cmd, "UPDATE %s SET ", tablename);
+    for(i = 0 ; i < fieldCount ; i++)
+    {
+        strcat(cmd, fieldList[i].FieldName);
+        strcat(cmd, "=");
+        if(fieldList[i].emDataType == _INTEGER)
+            strcat(cmd, fieldList[i].FieldData);
+        else
+        {
+            strcat(cmd, "'");
+            strcat(cmd, fieldList[i].FieldData);
+            strcat(cmd, "'");
+        }
+        if(i == (fieldCount - 1))
+            strcat(cmd, " ");
+        else
+            strcat(cmd, ", ");
+    }
+    strcat(cmd, "WHERE ");
+    strcat(cmd, condition);
+    strcat(cmd, ";");
+
+    rc = sqlite3_exec(db_list[index].handle, cmd, nullptr, nullptr, &zErrMsg);
+    if(rc != SQLITE_OK)
+    {
+        strcpy(err, zErrMsg);
+        sqlite3_free(zErrMsg);
+        return false;
+    }
+
+    return true;
+}
+
+bool sql_exec(char *dbfilename, char *cmd, char *err)
+{
+    char *zErrMsg = nullptr;
+    int index, rc;
+
+    index = find_db(dbfilename);
+    if(index == -1)
+        return false;
+
+    rc = sqlite3_exec(db_list[index].handle, cmd, nullptr, nullptr, &zErrMsg);
+    if(rc != SQLITE_OK)
+    {
+        strcpy(err, zErrMsg);
+        sqlite3_free(zErrMsg);
+        return false;
+    }
+
+    return true;
+}
+
+bool sql_commit(char *dbfilename, char *err)
+{
+    return sql_exec(dbfilename, "BEGIN", err);
+}
+
+bool sql_begin(char *dbfilename, char *err)
+{
+    return sql_exec(dbfilename, "COMMIT", err);
 }
